@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7A077C1E-0173-4C6D-A636-8628659386AA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Arena.Custom.Cccev.CustomActions</RootNamespace>
+    <AssemblyName>Arena.Custom.Cccev.CustomActions</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Arena.Framework">
+      <HintPath>..\..\Arena\bin\Arena.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AddResolutionToPersonNote.cs" />
+    <Compile Include="ExecuteStoredProcedure.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SendAssignmentEmail.cs" />
+    <Compile Include="SetWorkerAfterTestField.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\MSBuildCommunityTasks\MSBuild.Community.Tasks.Targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <BuildDir>builds</BuildDir>
+  </PropertyGroup>
+  <Target Name="AfterBuild" DependsOnTargets="BuildPackageZip">
+  </Target>
+  <!-- Clean old stuff -->
+  <Target Name="DeleteFiles">
+    <ItemGroup>
+      <OldFiles Include="$(BuildDir)\tmp\**" />
+    </ItemGroup>
+    <Delete Files="@(OldFiles)" />
+  </Target>
+  <!-- Prepare the files to be zipped -->
+  <Target Name="CopyFiles" DependsOnTargets="DeleteFiles">
+    <ItemGroup>
+      <SourceCode Include="*.cs" Exclude="MetricsByZip.cs;ArenaFamilySplitter.cs" />
+      <CopyFiles Include="$(OutputPath)Arena.Custom.Cccev.CustomActions.dll" />
+      <SqlFiles Include="Helpers\SQL\*" />
+      <OtherCode Include="Helpers\*.cs" />
+    </ItemGroup>
+    <MakeDir Directories="$(BuildDir)\tmp" Condition="!Exists('$(BuildDir)\tmp')" />
+    <MakeDir Directories="$(BuildDir)\tmp\required-SQL" Condition="!Exists('$(BuildDir)\tmp\required-SQL')" />
+    <MakeDir Directories="$(BuildDir)\tmp\source" Condition="!Exists('$(BuildDir)\tmp\source')" />
+    <MakeDir Directories="$(BuildDir)\tmp\source\Helpers" Condition="!Exists('$(BuildDir)\tmp\source\Helpers')" />
+    <Copy SourceFiles="@(CopyFiles)" DestinationFolder="$(BuildDir)\tmp" />
+    <Copy SourceFiles="@(SqlFiles)" DestinationFolder="$(BuildDir)\tmp\required-SQL" />
+    <Copy SourceFiles="@(SourceCode)" DestinationFolder="$(BuildDir)\tmp\source" />
+    <Copy SourceFiles="@(OtherCode)" DestinationFolder="$(BuildDir)\tmp\source\Helpers" />
+  </Target>
+  <!-- Create the package zip file -->
+  <Target Name="BuildPackageZip" DependsOnTargets="CopyFiles" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <ZipFiles Include="$(BuildDir)\tmp\**" />
+    </ItemGroup>
+    <Version BuildType="Automatic" RevisionType="Automatic" Major="2011" Minor="1">
+      <Output TaskParameter="Major" PropertyName="Major" />
+      <Output TaskParameter="Minor" PropertyName="Minor" />
+      <Output TaskParameter="Build" PropertyName="Build" />
+      <Output TaskParameter="Revision" PropertyName="Revision" />
+    </Version>
+    <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
+    <Zip Files="@(ZipFiles)" WorkingDirectory="$(BuildDir)\tmp\" ZipFileName="$(BuildDir)\Arena.Custom.Cccev.CustomActions-$(Major).$(Minor).$(Build).$(Revision).zip" ZipLevel="9" />
+  </Target>
+</Project>
